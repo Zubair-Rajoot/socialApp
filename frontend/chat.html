@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat</title>
+</head>
+<body>
+    <h1>Chat Room</h1>
+    <div id="messages"></div>
+    <input id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script>
+        const userId = localStorage.getItem('userId'); // Get the logged-in user's ID
+        const socket = io("http://localhost:3000", { query: { userId } }); // Pass user ID as a query
+
+        // Get recipientId from the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const recipientId = urlParams.get('recipientId');
+
+        socket.on('connect', () => {
+            console.log('Connected to server:', socket.id);
+        });
+
+        socket.on('receiveMessage', (data) => {
+            console.log('New message received:', data.message);
+            displayMessage(data);
+        });
+
+        function sendMessage() {
+            const message = document.getElementById('messageInput').value;
+
+            // Emit the message with senderId and recipientId
+            socket.emit('chatMessage', { senderId: userId, message, recipientId });
+            
+            // Display the message locally for sender
+            displayMessage({ senderId: "Me", message });
+            document.getElementById('messageInput').value = ''; // Clear input after sending
+        }
+
+        function displayMessage({ senderId, message }) {
+            const messagesDiv = document.getElementById("messages");
+            const messageElement = document.createElement("p");
+            messageElement.textContent = `${senderId}: ${message}`;
+            messagesDiv.appendChild(messageElement);
+        }
+    </script>
+</body>
+</html>

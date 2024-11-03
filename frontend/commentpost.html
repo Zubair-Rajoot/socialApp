@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment Box</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #comment-container {
+            width: 400px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        #comment-container h3 {
+            margin-top: 0;
+            font-size: 1.5em;
+            color: #333;
+        }
+
+        #comment-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: none;
+            font-size: 1em;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .comments-display {
+            margin-top: 20px;
+        }
+
+        .single-comment {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="comment-container">
+        <h3>Leave a Comment</h3>
+        <textarea id="comment-input" rows="3" placeholder="Write a comment..."></textarea>
+        <button id="post-button">Post</button>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get("postId");
+    
+        if (!postId) {
+            console.error("Post ID URL mein missing hai");
+        } else {
+            document.getElementById('post-button').addEventListener('click', async function () {
+                const commentInput = document.getElementById('comment-input').value;
+    
+                if (!commentInput.trim()) {
+                    alert('Comment likhna zaroori hai.');
+                    return;
+                }
+    
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        console.error("Local storage mein koi token nahi mila");
+                        return;
+                    }
+    
+                    const response = await fetch(`http://localhost:3000/post/${postId}/comment`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ comment: commentInput }) // Backend ke sath match karein
+                    });
+    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Post update nahi ho saki: ${errorText}`);
+                    }
+    
+                    const data = await response.json();
+                    console.log("Comment add ho gaya:", data);
+    
+                    // Post ID ko localStorage mein store karenge
+                    localStorage.setItem('updatedPostId', postId);
+    
+                    // Timeline page par wapas jayenge
+                    window.location.href = "timeline.html";
+                } catch (error) {
+                    console.error('Post update mein error:', error);
+                    alert('Post update nahi ho saki. Tafseel ke liye console check karein.');
+                }
+            });
+        }
+    </script>
+    
+</body>
+
+</html>

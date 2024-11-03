@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post</title>
+    <style>
+        * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #555;
+}
+
+input[type="text"],
+textarea,
+input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Create a New Post</h1>
+        <form action="http://localhost:3000/post" method="POST" enctype="multipart/form-data" id="createPostForm">
+            <div class="form-group">
+                <label for="content">Content</label>
+                <textarea id="content" name="content" rows="5" required></textarea>
+               
+                <input id="picture" type="file" name="postPicture"/>
+            </div>
+           
+            <button type="submit">Create Post</button>
+        </form>
+    </div>
+
+
+
+    <script>
+     document.getElementById('createPostForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    const postContent = document.getElementById('content').value;
+    const postPicture = document.getElementById('picture').files[0];
+
+    const formData = new FormData();
+    formData.append('postContent', postContent);  
+    formData.append('postPicture', postPicture);  
+
+    // Debugging: log FormData entries
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+    }
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/post', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            body: formData 
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log(data); 
+        window.location.href = "/timeline.html";  
+    } catch (error) {
+        console.error('Error:', error); 
+    }
+
+    this.reset();
+});
+
+
+        </script>
+        
+</body>
+</html>

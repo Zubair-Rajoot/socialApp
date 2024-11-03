@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Timeline</h1>
+        <div class="header-buttons">
+          <button onclick="window.location.href='login.html'">Login</button>
+          <button onclick="window.location.href='index.html'">Signup</button>
+          <button onclick="window.location.href='createPost.html'">Create Post</button>
+          <button onclick="window.location.href='profile.html'">Profile</button>
+          <button onclick="logout()">logout</button> 
+          <!-- <button onclick="window.location.href='chat.html'">messenger</button> -->
+        </div>
+      </header>
+      
+
+    <main class="container">
+      
+        <div id="postsContainer"></div>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 social app. All rights reserved.</p>
+    </footer>
+
+    <script>
+        async function fetchPosts() {
+            try {
+                const token = localStorage.getItem('token'); 
+                if (!token) {
+                    throw new Error('Token not found. Please log in.'); 
+                }
+    
+                const response = await fetch('http://localhost:3000/getposts', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`, 
+                        'Content-Type': 'application/json'
+                    }
+                });
+    
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+    
+                const data = await response.json();
+                displayPosts(data.posts); 
+                console.log(data.posts)
+            } catch (error) {
+                console.error("Error fetching posts:", error);
+            }
+        }
+
+        async function likePost(postId) {
+            try {
+                const token = localStorage.getItem('token'); 
+                if (!token) {
+                    throw new Error('Token not found. Please log in.'); 
+                }
+
+                const response = await fetch(`http://localhost:3000/post/${postId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`, 
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log(data.message);
+                fetchPosts();
+            } catch (error) {
+                console.error("Error in like post:", error);
+            }
+        }
+
+        async function dislikePost(postId) {
+            try {
+                const token = localStorage.getItem('token'); 
+                if (!token) {
+                    throw new Error('Token not found. Please log in.'); 
+                }
+
+                const response = await fetch(`http://localhost:3000/post/${postId}/dislike`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`, 
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log(data.message);
+                fetchPosts();
+            } catch (error) {
+                console.error("Error in dislike post:", error);
+            }
+        }
+
+        function displayPosts(posts) {
+            const postsContainer = document.getElementById('postsContainer'); 
+            postsContainer.innerHTML = ''; 
+
+            if (posts.length === 0) {
+                postsContainer.innerHTML = '<p>No posts available.</p>'; 
+                return;
+            }
+
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.classList.add('post'); 
+
+                const imagePath = post.postPicture ? `http://localhost:3000/uploads/${post.postPicture}` : '';
+
+                postElement.innerHTML = `
+                    <p><strong>User:</strong> ${post.name}</p>
+                    <h2>${post.postContent}</h2>
+                    ${post.postPicture ? `<img src="${imagePath}" alt="${post.name}">` : ''}
+                    
+                    <button onclick="likePost('${post._id}')">Like</button>
+                    <button onclick="dislikePost('${post._id}')">Dislike</button> 
+                    <button onclick="commentPost('${post._id}')">Comment</button> 
+                     <button onclick="messageUser('${post._id}')">message</button> 
+                    
+                    
+                    <p>Likes: ${post.likes}</p>
+                    <p>Dislikes: ${post.dislikes}</p>
+                    <div><strong>Comments:</strong></div>
+                    ${post.comments.map(comment => `<p>${comment.userName}: ${comment.commentText}</p>`).join('')}
+                `;
+                
+                postsContainer.appendChild(postElement); 
+            });
+        }
+
+        fetchPosts();
+
+        async function commentPost(postId) {
+            if (!postId) {
+                console.error("postId is missing");
+                return;
+            }
+            window.location.href = `commentPost.html?postId=${postId}`;
+        }
+
+        async function messageUser(postId) {
+            if (!postId) {
+                console.error("postId is missing");
+                return;
+            }
+            window.location.href = `chat.html?postId=${postId}`;
+        }
+
+
+
+        
+    async function logout() {
+    const token = localStorage.getItem('token');
+    if (token) {
+       
+            localStorage.removeItem("token"); 
+            window.location.href = "login.html"; 
+    
+    } else {
+        window.location.href = "login.html"; 
+    }
+}
+
+    </script>
+</body>
+</html>
